@@ -9,7 +9,7 @@
 // @description:zh-TW  一鍵下載 Twitter/X 圖片和影片，支援自訂檔名與下載歷史紀錄。
 // @author      ShanksSU
 // @namespace    https://github.com/ShanksSU/twitter-media-downloader
-// @version     0.2.1
+// @version     0.3.0
 // @match       https://twitter.com/*
 // @match       https://x.com/*
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=x.com
@@ -19,19 +19,19 @@
 // @grant       GM_addStyle
 // @license     MIT
 // ==/UserScript==
- 
+
 class Config {
     static AUTH_TOKEN = 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA';
     static defaultFilename = '{user-name}(@{user-id})_{index}';
     static language = {
-        en: { download: 'Download', completed: 'Download Completed', settings: 'Settings', history: 'Download Log', empty: 'No history yet.', unknown_date: 'Unknown Date', saved: 'Saved', dialog: { title: 'Download Settings', save: 'Save', save_history: 'Remember download history', auto_bookmark: 'Auto Bookmark on Download', clear_history: 'Clear All History', clear_confirm: 'Clear all download history?', pattern: 'File Name Pattern', preview: 'Preview:', empty_pattern: 'Pattern cannot be empty.', reset: '(Reset)', custom_mode: '(Custom Mode)', tag_mode: '(Tag Mode)', shortcut: 'Keyboard Shortcut:', tags: { '{user-name}': 'User Name', '{user-id}': 'User ID', '{status-id}': 'Tweet ID', '{date-time}': 'Time (UTC)', '{date-time-local}': 'Time (Local)', '{full-text}': 'Full Text', '{fav-count}': 'Likes', '{file-type}': 'Media Type', '{file-name}': 'Original Filename', '{media-count}': 'Media Count', '{index}': 'Index' } }, table: { thumb: 'Thumb', user: 'User', type: 'Type', size: 'Size', postTime: 'Post Time', downTime: 'Download Time', action: 'Action', go: 'Go', del: 'Delete' } },
-        ja: { download: 'ダウンロード', completed: 'ダウンロード完了', settings: '設定', history: 'ダウンロード履歴', empty: '履歴はありません。', unknown_date: '日付不明', saved: '保存しました', dialog: { title: 'ダウンロード設定', save: '保存', save_history: 'ダウンロード履歴を保存する', auto_bookmark: 'ダウンロード時に自動ブックマーク', clear_history: '履歴をクリア', clear_confirm: 'ダウンロード履歴を削除する？', pattern: 'ファイル名パターン', preview: 'プレビュー:', empty_pattern: 'パターンは空にできません。', reset: '(リセット)', custom_mode: '(カスタム)', tag_mode: '(タグモード)', shortcut: 'ショートカットキー:', tags: { '{user-name}': 'ユーザー名', '{user-id}': 'ユーザーID', '{status-id}': 'ツイートID', '{date-time}': '時間 (UTC)', '{date-time-local}': '時間 (ローカル)', '{full-text}': 'ツイート本文', '{fav-count}': 'いいね数', '{file-type}': 'メディア種類', '{file-name}': '元のファイル名', '{media-count}': 'メディア数', '{index}': 'インデックス' } }, table: { thumb: 'サムネ', user: 'ユーザー', type: '種類', size: 'サイズ', postTime: '投稿時間', downTime: '保存時間', action: 'アクション', go: '開く', del: '削除' } },
-        zh: { download: '下载', completed: '下载完成', settings: '设置', history: '下载记录', empty: '暂无记录。', unknown_date: '未知时间', saved: '已保存', dialog: { title: '下载设置', save: '保存', save_history: '保存下载记录', auto_bookmark: '下载时自动加入书签', clear_history: '(清除)', clear_confirm: '确认要清除下载记录？', pattern: '文件名格式', preview: '预览:', empty_pattern: '文件名格式不能为空。', reset: '(重置)', custom_mode: '(自订模式)', tag_mode: '(标签模式)', shortcut: '快捷键设定:', tags: { '{user-name}': '用户名称', '{user-id}': '用户账号', '{status-id}': '推文 ID', '{date-time}': '时间 (UTC)', '{date-time-local}': '时间 (本地)', '{full-text}': '推文內文', '{fav-count}': '点赞数', '{file-type}': '媒体类型', '{file-name}': '原始文件名', '{media-count}': '媒体总数', '{index}': '序号' } }, table: { thumb: '缩图', user: '用户', type: '类型', size: '大小', postTime: '贴文时间', downTime: '下载时间', action: '动作', go: '前往', del: '删除' } },
-        'zh-Hant': { download: '下載', completed: '下載完成', settings: '設置', history: '下載紀錄', empty: '暫無紀錄。', unknown_date: '未知時間', saved: '已保存', dialog: { title: '下載設置', save: '保存', save_history: '保存下載記錄', auto_bookmark: '下載時自動加入書籤', clear_history: '(清除)', clear_confirm: '確認要清除下載記錄？', pattern: '文件名規則', preview: '預覽:', empty_pattern: '文件名規則不能為空。', reset: '(重置)', custom_mode: '(自訂模式)', tag_mode: '(標籤模式)', shortcut: '快捷鍵設定:', tags: { '{user-name}': '使用者名稱', '{user-id}': '使用者帳號', '{status-id}': '推文 ID', '{date-time}': '時間 (UTC)', '{date-time-local}': '時間 (本地)', '{full-text}': '推文內文', '{fav-count}': '喜歡數量', '{file-type}': '媒體類型', '{file-name}': '原始檔名', '{media-count}': '媒體總數', '{index}': '排序序號' } }, table: { thumb: '縮圖', user: '用戶', type: '類型', size: '大小', postTime: '貼文時間', downTime: '下載時間', action: '動作', go: '前往', del: '刪除' } }
+        en: { download: 'Download', completed: 'Download Completed', settings: 'Settings', history: 'Download Log', empty: 'No history yet.', unknown_date: 'Unknown Date', saved: 'Saved', dialog: { title: 'Download Settings', save: 'Save', save_history: 'Remember download history', auto_bookmark: 'Auto Bookmark on Download', clear_history: 'Clear All History', clear_confirm: 'Clear all download history?', pattern: 'File Name Pattern', preview: 'Preview:', empty_pattern: 'Pattern cannot be empty.', reset: '(Reset)', custom_mode: '(Custom Mode)', tag_mode: '(Tag Mode)', shortcut: 'Keyboard Shortcut:', tags: { '{user-name}': 'User Name', '{user-id}': 'User ID', '{status-id}': 'Tweet ID', '{date-time}': 'Time (UTC)', '{date-time-local}': 'Time (Local)', '{full-text}': 'Full Text', '{fav-count}': 'Likes', '{file-type}': 'Media Type', '{file-name}': 'Original Filename', '{media-count}': 'Media Count', '{index}': 'Index', '{rt-user-name}': 'RT User Name', '{rt-user-id}': 'RT User ID'} }, table: { thumb: 'Thumb', user: 'User', type: 'Type', size: 'Size', postTime: 'Post Time', downTime: 'Download Time', action: 'Action', go: 'Go', del: 'Delete' } },
+        ja: { download: 'ダウンロード', completed: 'ダウンロード完了', settings: '設定', history: 'ダウンロード履歴', empty: '履歴はありません。', unknown_date: '日付不明', saved: '保存しました', dialog: { title: 'ダウンロード設定', save: '保存', save_history: 'ダウンロード履歴を保存する', auto_bookmark: 'ダウンロード時に自動ブックマーク', clear_history: '履歴をクリア', clear_confirm: 'ダウンロード履歴を削除する？', pattern: 'ファイル名パターン', preview: 'プレビュー:', empty_pattern: 'パターンは空にできません。', reset: '(リセット)', custom_mode: '(カスタム)', tag_mode: '(タグモード)', shortcut: 'ショートカットキー:', tags: { '{user-name}': 'ユーザー名', '{user-id}': 'ユーザーID', '{status-id}': 'ツイートID', '{date-time}': '時間 (UTC)', '{date-time-local}': '時間 (ローカル)', '{full-text}': 'ツイート本文', '{fav-count}': 'いいね数', '{file-type}': 'メディア種類', '{file-name}': '元のファイル名', '{media-count}': 'メディア数', '{index}': 'インデックス', '{rt-user-name}': 'RT ユーザー名', '{rt-user-id}': 'RT ユーザーID'} }, table: { thumb: 'サムネ', user: 'ユーザー', type: '種類', size: 'サイズ', postTime: '投稿時間', downTime: '保存時間', action: 'アクション', go: '開く', del: '削除' } },
+        zh: { download: '下载', completed: '下载完成', settings: '设置', history: '下载记录', empty: '暂无记录。', unknown_date: '未知时间', saved: '已保存', dialog: { title: '下载设置', save: '保存', save_history: '保存下载记录', auto_bookmark: '下载时自动加入书签', clear_history: '(清除)', clear_confirm: '确认要清除下载记录？', pattern: '文件名格式', preview: '预览:', empty_pattern: '文件名格式不能为空。', reset: '(重置)', custom_mode: '(自订模式)', tag_mode: '(标签模式)', shortcut: '快捷键设定:', tags: { '{user-name}': '用户名称', '{user-id}': '用户账号', '{status-id}': '推文 ID', '{date-time}': '时间 (UTC)', '{date-time-local}': '时间 (本地)', '{full-text}': '推文內文', '{fav-count}': '点赞数', '{file-type}': '媒体类型', '{file-name}': '原始文件名', '{media-count}': '媒体总数', '{index}': '序号', '{rt-user-name}': '转帖者名称', '{rt-user-id}': '转帖者账号'} }, table: { thumb: '缩图', user: '用户', type: '类型', size: '大小', postTime: '贴文时间', downTime: '下载时间', action: '动作', go: '前往', del: '删除' } },
+        'zh-Hant': { download: '下載', completed: '下載完成', settings: '設置', history: '下載紀錄', empty: '暫無紀錄。', unknown_date: '未知時間', saved: '已保存', dialog: { title: '下載設置', save: '保存', save_history: '保存下載記錄', auto_bookmark: '下載時自動加入書籤', clear_history: '(清除)', clear_confirm: '確認要清除下載記錄？', pattern: '文件名規則', preview: '預覽:', empty_pattern: '文件名規則不能為空。', reset: '(重置)', custom_mode: '(自訂模式)', tag_mode: '(標籤模式)', shortcut: '快捷鍵設定:', tags: { '{user-name}': '使用者名稱', '{user-id}': '使用者帳號', '{status-id}': '推文 ID', '{date-time}': '時間 (UTC)', '{date-time-local}': '時間 (本地)', '{full-text}': '推文內文', '{fav-count}': '喜歡數量', '{file-type}': '媒體類型', '{file-name}': '原始檔名', '{media-count}': '媒體總數', '{index}': '排序序號', '{rt-user-name}': '轉推者名稱', '{rt-user-id}': '轉推者帳號'} }, table: { thumb: '縮圖', user: '用戶', type: '類型', size: '大小', postTime: '貼文時間', downTime: '下載時間', action: '動作', go: '前往', del: '刪除' } }
     };
- 
+
     static logIconUri = `data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'%3E%3C/path%3E%3Cpolyline points='14 2 14 8 20 8'%3E%3C/polyline%3E%3Cline x1='16' y1='13' x2='8' y2='13'%3E%3C/line%3E%3Cline x1='16' y1='17' x2='8' y2='17'%3E%3C/line%3E%3Cpolyline points='10 9 9 9 8 9'%3E%3C/polyline%3E%3C/svg%3E`;
- 
+
     static media_btn_css = `
         .tmd-down {margin-left: 12px; order: 99; position: relative;}
         .tmd-down:hover > div > div > div > div {color: #FFD700;}
@@ -103,7 +103,7 @@ class Config {
         :hover > .tmd-down.tmd-img, .tmd-img.loading, .tmd-img.completed, .tmd-img.exist, .tmd-img.failed {display: block !important;}
         .tweet-detail-action-item {width: 20% !important;}
     `;
- 
+
     static modal_structure_css = `
         .tmd-modal-wrapper {position: fixed; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; display: flex; justify-content: center; align-items: center;}
         .tmd-modal-dialog {background-color: #fff; border-radius: 10px; width: 850px; max-width: 95vw; display: flex; flex-direction: column; color: #0f1419; font-family: sans-serif; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: background-color 0.2s, color 0.2s;}
@@ -115,8 +115,8 @@ class Config {
         .tmd-icon-btn:hover {color: #0f1419;}
         .tmd-icon-btn.danger {color: #f4212e;}
         .tmd-icon-btn.danger:hover {color: #c50f1a;}
-        .tmd-modal-content {overflow-y: auto; max-height: 50vh; padding: 0;}
-        .tmd-modal-settings {padding: 20px; overflow-y: auto; max-height: 50vh;}
+        .tmd-modal-content {overflow-y: auto; max-height: 60vh; padding: 0;}
+        .tmd-modal-settings {padding: 20px; overflow-y: auto; max-height: 60vh;}
         .tmd-empty-text {text-align: center; color: #536471; margin: 20px 0; padding: 20px;}
         .tmd-modal-content::-webkit-scrollbar, .tmd-table-wrapper::-webkit-scrollbar {width: 8px; height: 8px;}
         .tmd-modal-content::-webkit-scrollbar-track, .tmd-table-wrapper::-webkit-scrollbar-track {background: #ffffff; border-radius: 4px;}
@@ -144,18 +144,18 @@ class Config {
         .tmd-dark-theme .tmd-modal-content::-webkit-scrollbar-thumb, .tmd-dark-theme .tmd-table-wrapper::-webkit-scrollbar-thumb {background: #38444d;}
         .tmd-dark-theme .tmd-modal-content::-webkit-scrollbar-thumb:hover, .tmd-dark-theme .tmd-table-wrapper::-webkit-scrollbar-thumb:hover {background: #8899a6;}
     `;
- 
+
     static history_log_css = `
         .tmd-history-btn {position: fixed; left: 16px; bottom: 16px; color: #000; background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 4px; display: flex; align-items: center; cursor: pointer; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s;}
         .tmd-history-btn:hover {background: #f0f0f0;}
         .tmd-history-btn.tmd-dark-theme {background: #15202b; color: #fff; border-color: #38444d;}
         .tmd-history-btn.tmd-dark-theme:hover {background: #1e2732;}
         .tmd-history-btn label {display: inline-flex; align-items: center; margin: 0 8px; cursor: pointer; font-family: monospace; font-size: 14px;}
- 
+
         .tmd-table-wrapper { width: 100%; overflow-x: auto; }
         .tmd-table { width: max-content; min-width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; font-family: sans-serif; white-space: nowrap; }
         .tmd-table th, .tmd-table td { border-bottom: 1px solid #eff3f4; vertical-align: middle; }
- 
+
         .tmd-table td {
             padding: 10px 15px;
             max-width: 10px;
@@ -163,7 +163,7 @@ class Config {
             text-overflow: ellipsis;
             white-space: nowrap;
         }
- 
+
         .tmd-table td:last-child { max-width: none; overflow: visible; }
         .tmd-table th { background: #f7f9f9; color: #536471; position: sticky; top: 0; z-index: 10; font-weight: bold; box-shadow: 0 1px 0 #eff3f4; padding: 0; }
         .tmd-table th:nth-child(1) .tmd-th-inner { width: 65px; }
@@ -173,7 +173,7 @@ class Config {
         .tmd-table th:nth-child(5) .tmd-th-inner { width: 130px; }
         .tmd-table th:nth-child(6) .tmd-th-inner { width: 130px; }
         .tmd-table th:nth-child(7) .tmd-th-inner { width: 120px; resize: none; }
- 
+
         .tmd-th-inner { resize: horizontal; overflow: hidden; padding: 10px 15px; min-width: 40px; display: block; box-sizing: border-box; }
         .tmd-table tbody tr:hover { background: #f7f9f9; }
         .tmd-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; background: #eee; display: block; }
@@ -182,7 +182,7 @@ class Config {
         .tmd-action-btn.del { color: #f4212e; border-color: #fcaeb4; background: #fff; }
         .tmd-action-btn.del:hover { background: #fce8e8; }
     `;
- 
+
     static settings_form_css = `
         .tmd-checkbox-label {display: flex; align-items: center; margin-bottom: 20px; cursor: pointer; font-size: 15px;}
         .tmd-checkbox-label input {margin-right: 10px; cursor: pointer; width: 16px; height: 16px;}
@@ -220,7 +220,7 @@ class Config {
         .tmd-dark-theme .tmd-tag-btn { background: #1e2732; border-color: #38444d; color: #8899a6; }
         .tmd-dark-theme .tmd-tag-btn:hover { background: #2c3640; color: #1d9bf0; border-color: #1d9bf0; }
     `;
- 
+
     static svg = `
         <g class="download">
             <path d="M7 11l5 5 5-5M12 4v12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -239,7 +239,7 @@ class Config {
             <path d="M14.5 7.5l-5 9M9.5 7.5l5 9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
         </g>
     `;
- 
+
     static icon_svg = {
         back: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`,
         settings: `<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
@@ -249,8 +249,8 @@ class Config {
         moon: `<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
     };
 }
- 
- 
+
+
 class Utils {
     static getCookie(name) {
         let cookies = {};
@@ -259,7 +259,7 @@ class Utils {
         });
         return name ? cookies[name] : cookies;
     }
- 
+
     static formatDate(i, o, tz) {
         let d = new Date(i);
         if (tz) d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -272,15 +272,15 @@ class Utils {
         };
         return o.replace(/(YY(YY)?|MMM?|DD|hh|mm|ss|h2|ap)/g, n => ('0' + v[n]).slice(-n.length));
     }
- 
+
     static getInvalidChars() {
         return {
             "\n": "　", "\t": "　", "\\": "⧹", "/": "⧸", "|": "｜", ":": "꞉", "*": "＊", "?": "？", '"': '″', "<": "＜", ">": "＞", '\u200b': '', '\u200c': '', '\u200d': '', '\u2060': '', '\ufeff': '', '🔞': ''
         };
     }
 }
- 
- 
+
+
 class StorageManager {
     constructor() {
         this.history = [];
@@ -291,7 +291,7 @@ class StorageManager {
         this.theme = 'light';
         this.lang = 'auto';
     }
- 
+
     async init() {
         let rawHistory = await GM_getValue('download_history', []);
         this.history = rawHistory.map(item => typeof item === 'string' ? { id: item, time: null } : item);
@@ -302,7 +302,7 @@ class StorageManager {
         this.theme = await GM_getValue('tmd_theme', 'light');
         this.lang = await GM_getValue('tmd_lang', 'auto');
     }
- 
+
     async setSetting(key, value) {
         await GM_setValue(key, value);
         if (key === 'save_history') this.saveHistoryFlag = value;
@@ -312,30 +312,30 @@ class StorageManager {
         if (key === 'tmd_theme') this.theme = value;
         if (key === 'tmd_lang') this.lang = value;
     }
- 
+
     async addHistory(infoObj) {
         if (infoObj.id && !this.isDownloaded(infoObj.id)) {
             this.history.push({ ...infoObj, time: Date.now() });
             await GM_setValue('download_history', this.history);
         }
     }
- 
+
     isDownloaded(statusId) {
         return this.history.some(item => item.id === statusId);
     }
- 
+
     async clearHistory() {
         this.history = [];
         await GM_setValue('download_history', []);
     }
- 
+
     async removeHistory(id) {
         this.history = this.history.filter(item => item.id !== id);
         await GM_setValue('download_history', this.history);
     }
 }
- 
- 
+
+
 class TwitterAPI {
     static async fetchTweetJson(status_id) {
         const cookies = Utils.getCookie();
@@ -384,32 +384,32 @@ class TwitterAPI {
             "verified_phone_label_enabled": false,
             "view_counts_everywhere_api_enabled": true
         })}`);
- 
+
         let headers = {
             'authorization': Config.AUTH_TOKEN,
             'x-twitter-active-user': 'yes',
             'x-twitter-client-language': cookies.lang || 'en'
         };
- 
+
         if (cookies.ct0) headers['x-csrf-token'] = cookies.ct0;
         if (cookies.gt) headers['x-guest-token'] = cookies.gt;
- 
+
         let res = await fetch(url, { headers });
         if (!res.ok) throw new Error("API Fetch Failed");
- 
+
         let tweet_detail = await res.json();
         return tweet_detail.data?.tweetResult?.result?.tweet || tweet_detail.data?.tweetResult?.result;
     }
 }
- 
- 
+
+
 class DownloadQueue {
     constructor() {
         this.tasks = [];
         this.thread = 0;
         this.max_thread = 2;
     }
- 
+
     add(task) {
         this.tasks.push(task);
         if (this.thread < this.max_thread) {
@@ -417,7 +417,7 @@ class DownloadQueue {
             this.next();
         }
     }
- 
+
     async next() {
         if (this.tasks.length === 0) {
             this.thread--;
@@ -427,7 +427,7 @@ class DownloadQueue {
         await this.start(task);
         this.next();
     }
- 
+
     start(task) {
         return new Promise(resolve => {
             GM_download({
@@ -439,7 +439,7 @@ class DownloadQueue {
             });
         });
     }
- 
+
     retry(task) {
         task.retry = (task.retry || 0) + 1;
         if (task.retry <= 2) {
@@ -448,17 +448,17 @@ class DownloadQueue {
         }
     }
 }
- 
+
 class UIManager {
     constructor(app) {
         this.app = app;
         this.lang = Config.language[document.documentElement.lang] || Config.language.en;
     }
- 
+
     injectCSS() {
         document.head.insertAdjacentHTML('beforeend', `<style>${Config.media_btn_css}${Config.modal_structure_css}${Config.history_log_css}${Config.settings_form_css}</style>`);
     }
- 
+
     setButtonStatus(btn, css, title) {
         if (css) {
             btn.classList.remove('download', 'completed', 'exist', 'loading', 'failed');
@@ -466,31 +466,31 @@ class UIManager {
         }
         if (title) btn.title = title;
     }
- 
+
     renderHistoryUI() {
         const float_btn_css = `.tmd-history-btn label:before {content: " "; width: 32px; height: 16px; background-position: center; background-repeat: no-repeat; background-image:url("${Config.logIconUri}");}`;
         document.head.insertAdjacentHTML('beforeend', `<style>${float_btn_css}</style>`);
- 
+
         this.historyBtn = document.createElement('div');
         this.historyBtn.title = this.lang.history;
         this.historyBtn.classList.add('tmd-history-btn');
- 
+
         if (this.app.storage.theme === 'dark') {
             this.historyBtn.classList.add('tmd-dark-theme');
         }
- 
+
         this.historyBtn.innerHTML = `<label>${this.app.storage.history.length}</label>`;
         document.body.appendChild(this.historyBtn);
- 
+
         this.historyBtn.onclick = () => this.showModal();
     }
- 
+
     updateHistoryCount() {
         if (this.historyBtn) {
             this.historyBtn.querySelector('label').innerText = this.app.storage.history.length;
         }
     }
- 
+
     getLang() {
         let pref = this.app.storage.lang;
         if (pref !== 'auto' && Config.language[pref]) {
@@ -498,11 +498,11 @@ class UIManager {
         }
         return Config.language[document.documentElement.lang] || Config.language.en;
     }
- 
+
     showModal(startView = 'history') {
         let currentView = startView;
         this.lang = this.getLang();
- 
+
         const $element = (parent, tag, className, content) => {
             let el = document.createElement(tag);
             if (className) el.className = className;
@@ -510,27 +510,27 @@ class UIManager {
             parent.appendChild(el);
             return el;
         };
- 
+
         const formatDt = (ts) => {
             if (!ts) return this.lang.unknown_date || 'Unknown Date';
             let d = new Date(ts);
             let pad = n => n.toString().padStart(2, '0');
             return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
         };
- 
+
         let wapper = $element(document.body, 'div', 'tmd-modal-wrapper');
         wapper.onclick = (e) => { if (e.target === wapper) wapper.remove(); };
- 
+
         let dialog = $element(wapper, 'div', 'tmd-modal-dialog');
         if (this.app.storage.theme === 'dark') dialog.classList.add('tmd-dark-theme');
- 
+
         let header = $element(dialog, 'div', 'tmd-modal-header');
         let headerLeft = $element(header, 'div', 'tmd-modal-header-left');
         let backIcon = (Config.icon_svg && Config.icon_svg.back) ? Config.icon_svg.back : '←';
         let backBtn = $element(headerLeft, 'button', 'tmd-icon-btn', backIcon);
         let titleEl = $element(headerLeft, 'h3', 'tmd-modal-title', '');
         let headerActions = $element(header, 'div', 'tmd-modal-actions');
- 
+
         let langSelect = $element(headerActions, 'select', 'tmd-lang-select');
         let langOptions = [
             { val: 'auto', txt: 'Auto' },
@@ -544,13 +544,13 @@ class UIManager {
             opt.value = l.val;
             if (this.app.storage.lang === l.val) opt.selected = true;
         });
- 
+
         langSelect.onchange = async () => {
             await this.app.storage.setSetting('tmd_lang', langSelect.value);
             wapper.remove();
             this.showModal(currentView);
         };
- 
+
         let themeBtn = $element(headerActions, 'button', 'tmd-icon-btn');
         let sunIcon = (Config.icon_svg && Config.icon_svg.sun) ? Config.icon_svg.sun : 'S';
         let moonIcon = (Config.icon_svg && Config.icon_svg.moon) ? Config.icon_svg.moon : 'M';
@@ -565,44 +565,44 @@ class UIManager {
                 this.historyBtn.classList.toggle('tmd-dark-theme', newTheme === 'dark');
             }
         };
- 
+
         let setIcon = (Config.icon_svg && Config.icon_svg.settings) ? Config.icon_svg.settings : '⚙';
         let settingsBtn = $element(headerActions, 'button', 'tmd-icon-btn', setIcon);
         settingsBtn.title = this.lang.settings || 'Settings';
- 
+
         let clearIcon = (Config.icon_svg && Config.icon_svg.clear) ? Config.icon_svg.clear : '🗑';
         let clearBtn = $element(headerActions, 'button', 'tmd-icon-btn danger', clearIcon);
         const dialogLang = this.lang.dialog || {};
         clearBtn.title = dialogLang.clear_history || 'Clear History';
- 
+
         let closeIcon = (Config.icon_svg && Config.icon_svg.close) ? Config.icon_svg.close : 'X';
         let closeBtn = $element(headerActions, 'button', 'tmd-icon-btn', closeIcon);
         closeBtn.onclick = () => wapper.remove();
- 
+
         let historyContainer = $element(dialog, 'div', 'tmd-modal-content');
         let settingsContainer = $element(dialog, 'div', 'tmd-modal-settings');
         let top_settings_row = $element(settingsContainer, 'div', 'tmd-pattern-header');
         top_settings_row.style.alignItems = 'center';
- 
+
         let left_checkbox_group = $element(top_settings_row, 'div');
         left_checkbox_group.style.display = 'flex';
         left_checkbox_group.style.flexDirection = 'column';
         left_checkbox_group.style.gap = '10px';
- 
+
         let save_history_label = $element(left_checkbox_group, 'label', 'tmd-checkbox-label');
         save_history_label.style.marginBottom = '0';
         let save_history_input = $element(save_history_label, 'input');
         save_history_input.type = 'checkbox';
         save_history_input.checked = this.app.storage.saveHistoryFlag;
         $element(save_history_label, 'span', '', dialogLang.save_history || 'Remember download history');
- 
+
         let auto_bookmark_label = $element(left_checkbox_group, 'label', 'tmd-checkbox-label');
         auto_bookmark_label.style.marginBottom = '0';
         let auto_bookmark_input = $element(auto_bookmark_label, 'input');
         auto_bookmark_input.type = 'checkbox';
         auto_bookmark_input.checked = this.app.storage.autoBookmarkFlag;
         $element(auto_bookmark_label, 'span', '', dialogLang.auto_bookmark || 'Auto Bookmark');
- 
+
         let shortcut_label = $element(top_settings_row, 'div', 'tmd-pattern-label');
         shortcut_label.style.marginBottom = '0';
         shortcut_label.innerHTML = `${dialogLang.shortcut || 'Shortcut:'}`;
@@ -611,28 +611,28 @@ class UIManager {
         shortcut_input.maxLength = 1;
         shortcut_input.value = this.app.storage.shortcutKey || 'D';
         shortcut_input.oninput = () => { shortcut_input.value = shortcut_input.value.toUpperCase(); };
- 
+
         let pattern_header = $element(settingsContainer, 'div', 'tmd-pattern-header');
         pattern_header.style.marginTop = '20px';
         $element(pattern_header, 'label', 'tmd-pattern-label', dialogLang.pattern || 'File Pattern');
- 
+
         let pattern_actions = $element(pattern_header, 'div', 'tmd-modal-actions');
         let modeBtn = $element(pattern_actions, 'button', 'tmd-btn-reset');
         let resetBtn = $element(pattern_actions, 'button', 'tmd-btn-reset', dialogLang.reset || '(Reset)');
- 
+
         let tag_mode_ui = $element(settingsContainer, 'div');
         let active_container = $element(tag_mode_ui, 'div', 'tmd-active-tags-box');
         let available_container = $element(tag_mode_ui, 'div', 'tmd-available-tags-box');
- 
+
         let custom_mode_ui = $element(settingsContainer, 'div');
         let pattern_input = $element(custom_mode_ui, 'textarea', 'tmd-textarea');
         let custom_tag_container = $element(custom_mode_ui, 'div', 'tmd-tag-container');
- 
+
         const tagsDict = dialogLang.tags || {};
- 
+
         const excludedTags = ['{media-count}', '{date-time}'];  // '{full-text}',
         let validTagsKeys = Object.keys(tagsDict).filter(tag => !excludedTags.includes(tag));
- 
+
         validTagsKeys.forEach(tagText => {
             let btnText = `${tagsDict[tagText]}`;
             let tagBtn = $element(custom_tag_container, 'div', 'tmd-available-tag', btnText);
@@ -646,34 +646,34 @@ class UIManager {
                 updatePreview();
             };
         });
- 
+
         let currentPattern = this.app.storage.filenamePattern || Config.defaultFilename || '{user-name}-{status-id}';
         let extracted = (currentPattern.match(/\{[^}]+\}/g) || []).filter(t => validTagsKeys.includes(t));
         let uniqueTags = [...new Set(extracted)];
- 
+
         let isCustomMode = currentPattern !== uniqueTags.join('_');
         let activeTags = uniqueTags;
- 
+
         const updateTagModeUI = () => {
             active_container.innerHTML = '';
             available_container.innerHTML = '';
             let draggedItem = null;
- 
+
             activeTags.forEach((tag, idx) => {
                 let el = $element(active_container, 'div', 'tmd-active-tag');
                 el.draggable = true;
                 el.dataset.idx = idx;
- 
+
                 el.innerHTML = `
                     <span class="tmd-drag-handle"><svg viewBox="0 0 10 10" width="12" height="12" fill="currentColor"><path d="M3 2a1 1 0 110-2 1 1 0 010 2zm0 4a1 1 0 110-2 1 1 0 010 2zm0 4a1 1 0 110-2 1 1 0 010 2zm4-8a1 1 0 110-2 1 1 0 010 2zm0 4a1 1 0 110-2 1 1 0 010 2zm0 4a1 1 0 110-2 1 1 0 010 2z"/></svg></span>
                     ${tagsDict[tag]}
                     <span class="tmd-tag-close"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
                 `;
- 
+
                 el.ondragstart = function (e) { draggedItem = this; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => this.classList.add('dragging'), 0); };
                 el.ondragend = function () { this.classList.remove('dragging'); draggedItem = null; };
                 el.ondragover = function (e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; };
- 
+
                 el.ondrop = function (e) {
                     e.stopPropagation();
                     if (draggedItem && draggedItem !== this) {
@@ -681,14 +681,14 @@ class UIManager {
                         let toIdx = parseInt(this.dataset.idx);
                         let [moved] = activeTags.splice(fromIdx, 1);
                         activeTags.splice(toIdx, 0, moved);
- 
+
                         if (!isCustomMode) pattern_input.value = activeTags.join('_');
                         updateTagModeUI();
                         updatePreview();
                     }
                     return false;
                 };
- 
+
                 el.querySelector('.tmd-tag-close').onclick = () => {
                     activeTags.splice(idx, 1);
                     if (!isCustomMode) pattern_input.value = activeTags.join('_');
@@ -696,7 +696,7 @@ class UIManager {
                     updatePreview();
                 };
             });
- 
+
             validTagsKeys.forEach(tag => {
                 if (!activeTags.includes(tag)) {
                     let el = $element(available_container, 'div', 'tmd-available-tag', tagsDict[tag]);
@@ -709,12 +709,12 @@ class UIManager {
                 }
             });
         };
- 
+
         const toggleMode = () => {
             modeBtn.innerText = isCustomMode ? (dialogLang.tag_mode || 'Tag Mode') : (dialogLang.custom_mode || 'Custom Mode');
             tag_mode_ui.style.display = isCustomMode ? 'none' : 'block';
             custom_mode_ui.style.display = isCustomMode ? 'block' : 'none';
- 
+
             if (!isCustomMode) {
                 let currentText = pattern_input.value || '';
                 let textExtracted = (currentText.match(/\{[^}]+\}/g) || []).filter(t => validTagsKeys.includes(t));
@@ -724,9 +724,9 @@ class UIManager {
             }
             updatePreview();
         };
- 
+
         modeBtn.onclick = () => { isCustomMode = !isCustomMode; toggleMode(); };
- 
+
         resetBtn.onclick = () => {
             if (isCustomMode) {
                 pattern_input.value = Config.defaultFilename || '{user-name}_{status-id}';
@@ -737,48 +737,54 @@ class UIManager {
             }
             updatePreview();
         };
- 
+
         let preview_title = $element(settingsContainer, 'div', 'tmd-pattern-label', dialogLang.preview || 'Preview:');
         preview_title.style.marginTop = '15px';
         let preview_box = $element(settingsContainer, 'div', 'tmd-preview-box');
         let preview_error = $element(settingsContainer, 'div', 'tmd-preview-error', dialogLang.empty_pattern || 'Empty');
         let saveSettingsBtn = $element(settingsContainer, 'button', 'tmd-btn-save', dialogLang.save || 'Save');
- 
+
         const updatePreview = () => {
             let val = pattern_input.value.trim();
             if (!val) {
                 preview_error.style.display = 'block'; preview_box.style.display = 'none'; saveSettingsBtn.disabled = true; return;
             }
             preview_error.style.display = 'none'; preview_box.style.display = 'block'; saveSettingsBtn.disabled = false;
-            let mockInfo = { 'status-id': '20231011', 'user-name': 'Jingliu', 'user-id': 'Jingliu_love', 'fav-count': '999', 'file-type': 'photo', 'file-name': 'original_pic', 'media-count': '2', 'index': '1' };
+
+            let mockInfo = {
+                'status-id': '20231011', 'user-name': 'Jingliu', 'user-id': 'Jingliu_love',
+                'rt-user-name': 'Zpang', 'rt-user-id': 'chirong726',  // <--- 新增這兩項
+                'fav-count': '999', 'file-type': 'photo', 'file-name': 'original_pic', 'media-count': '2', 'index': '1'
+            };
+
             let out = val.split('\n').join('');
             let invalid = Utils.getInvalidChars ? Utils.getInvalidChars() : {};
             let datetime = out.match(/{date-time(-local)?:[^{}]+}/) ? out.match(/{date-time(?:-local)?:([^{}]+)}/)[1].replace(/[\\/|<>*?:"]/g, v => invalid[v] || '') : 'YYYYMMDD-hhmmss';
- 
+
             if (Utils.formatDate) {
                 mockInfo['date-time'] = Utils.formatDate(Date.now(), datetime);
                 mockInfo['date-time-local'] = Utils.formatDate(Date.now(), datetime, true);
             }
- 
+
             let textLength = out.match(/{full-text:(\d+)}/) ? parseInt(out.match(/{full-text:(\d+)}/)[1], 10) : 999;
             mockInfo['full-text'] = 'This is a sample tweet text preview.'.substring(0, textLength);
- 
+
             let parsed = (out.replace(/\.?{file-ext}/, '') + (!out.includes('{index}') && !out.includes('{file-name}') ? '-1' : '') + '.jpg').replace(/{([^{}:]+)(:[^{}]+)?}/g, (_, name) => mockInfo[name] != null ? mockInfo[name] : '');
             preview_box.innerText = parsed;
         };
         pattern_input.addEventListener('input', updatePreview);
- 
+
         pattern_input.value = currentPattern;
         updateTagModeUI();
         toggleMode();
- 
+
         const updateView = () => {
             if (currentView === 'history') {
                 let histLen = this.app.storage.history ? this.app.storage.history.length : 0;
                 titleEl.innerText = `${this.lang.history || 'History'} (${histLen})`;
                 backBtn.style.display = 'none'; settingsBtn.style.display = 'flex'; clearBtn.style.display = 'flex';
                 historyContainer.style.display = 'block'; settingsContainer.style.display = 'none';
- 
+
                 historyContainer.innerHTML = '';
                 if (histLen === 0) {
                     $element(historyContainer, 'p', 'tmd-empty-text', this.lang.empty || 'Empty');
@@ -787,35 +793,35 @@ class UIManager {
                     let table = $element(tableWrap, 'table', 'tmd-table');
                     let thead = $element(table, 'thead');
                     let trHead = $element(thead, 'tr');
- 
+
                     const tableLang = this.lang.table || {};
                     ['thumb', 'user', 'type', 'size', 'postTime', 'downTime', 'action'].forEach(k => {
                         let th = $element(trHead, 'th');
                         $element(th, 'div', 'tmd-th-inner', tableLang[k] || k);
                     });
- 
+
                     let tbody = $element(table, 'tbody');
                     let historyCopy = [...this.app.storage.history].reverse();
- 
+
                     historyCopy.forEach(item => {
                         let tr = $element(tbody, 'tr');
- 
+
                         let tdThumb = $element(tr, 'td');
                         if (item.thumb) {
                             let img = $element(tdThumb, 'img', 'tmd-thumb');
                             img.src = item.thumb;
                         } else { tdThumb.innerText = '-'; }
- 
+
                         $element(tr, 'td', '', item.user || '-');
                         $element(tr, 'td', '', item.type || '-');
                         $element(tr, 'td', '', item.size || 'Unknown');
                         $element(tr, 'td', '', formatDt(item.postTime));
                         $element(tr, 'td', '', formatDt(item.time));
- 
+
                         let tdAction = $element(tr, 'td');
                         let goBtn = $element(tdAction, 'button', 'tmd-action-btn', tableLang.go || 'Go');
                         goBtn.onclick = () => window.open(`https://x.com/i/status/${item.id}`, '_blank');
- 
+
                         let delBtn = $element(tdAction, 'button', 'tmd-action-btn del', tableLang.del || 'Delete');
                         delBtn.onclick = async () => {
                             await this.app.storage.removeHistory(item.id);
@@ -830,10 +836,10 @@ class UIManager {
                 historyContainer.style.display = 'none'; settingsContainer.style.display = 'block';
             }
         };
- 
+
         settingsBtn.onclick = () => { currentView = 'settings'; updateView(); };
         backBtn.onclick = () => { currentView = 'history'; updateView(); };
- 
+
         clearBtn.onclick = async () => {
             if (confirm(dialogLang.clear_confirm || 'Clear all?')) {
                 await this.app.storage.clearHistory();
@@ -841,31 +847,44 @@ class UIManager {
                 updateView();
             }
         };
- 
+
         saveSettingsBtn.onclick = async () => {
             await this.app.storage.setSetting('save_history', save_history_input.checked);
             await this.app.storage.setSetting('auto_bookmark', auto_bookmark_input.checked);
             await this.app.storage.setSetting('filename', pattern_input.value);
             await this.app.storage.setSetting('shortcut_key', shortcut_input.value);
- 
+
             saveSettingsBtn.innerText = this.lang.saved || 'Saved';
             saveSettingsBtn.classList.add('saved'); saveSettingsBtn.disabled = true;
             setTimeout(() => wapper.remove(), 200);
         };
- 
+
         updateView();
     }
- 
+
     addButtonsToArticle(article) {
         if (article.dataset.detected) return;
         article.dataset.detected = 'true';
- 
+
         let media = article.querySelector(['a[href*="/photo/1"]', 'div[role="progressbar"]', 'button[data-testid="playButton"]', 'a[href="/settings/content_you_see"]', 'div.media-image-container', 'div.media-preview-container', 'div[aria-labelledby]>div:first-child>div[role="button"][tabindex="0"]'].join(','));
         if (media) {
             let status_id = article.querySelector('a[href*="/status/"]').href.split('/status/').pop().split('/').shift();
+
+
+            let retweeter_name = '', retweeter_id = '';
+            let socialContext = article.querySelector('[data-testid="socialContext"]');
+            if (socialContext) {
+                let rawText = socialContext.textContent.trim();
+                let lastSpaceIndex = rawText.lastIndexOf(' ');
+                retweeter_name = lastSpaceIndex !== -1 ? rawText.substring(0, lastSpaceIndex).trim() : rawText;
+                let href = socialContext.closest('a')?.getAttribute('href');
+                retweeter_id = href ? href.replace('/', '') : '';
+            }
+
+
             let btn_share = Array.from(article.querySelector('div[role="group"]:last-of-type, ul.tweet-actions, ul.tweet-detail-actions').querySelectorAll(':scope>div>div, li.tweet-action-item>a, li.tweet-detail-action-item>a')).pop().parentNode;
             let btn_down = btn_share.cloneNode(true);
- 
+
             btn_down.querySelector('button')?.removeAttribute('disabled');
             if (this.app.isTweetDeck) {
                 btn_down.firstElementChild.innerHTML = `<svg viewBox="0 0 24 24" style="width: 18px; height: 18px;">${Config.svg}</svg>`;
@@ -874,15 +893,15 @@ class UIManager {
             } else {
                 btn_down.querySelector('svg').innerHTML = Config.svg;
             }
- 
+
             let is_exist = this.app.storage.isDownloaded(status_id);
             this.setButtonStatus(btn_down, 'tmd-down');
             this.setButtonStatus(btn_down, is_exist ? 'exist' : 'download', is_exist ? this.lang.completed : this.lang.download);
- 
+
             btn_share.parentNode.insertBefore(btn_down, btn_share.nextSibling);
             btn_down.onclick = () => {
-                this.app.handleDownloadClick(btn_down, status_id, is_exist);
- 
+                this.app.handleDownloadClick(btn_down, status_id, is_exist, null, retweeter_name, retweeter_id);
+
                 if (this.app.storage.autoBookmarkFlag) {
                     // let bookmarkBtn = article.querySelector('[data-testid="bookmark"]');
                     let bookmarkBtn = btn_share.parentNode.querySelector('button[data-testid="bookmark"]');
@@ -892,7 +911,7 @@ class UIManager {
                 }
             };
         }
- 
+
         let imgs = article.querySelectorAll('a[href*="/photo/"]');
         if (imgs.length > 1) {
             let status_id = article.querySelector('a[href*="/status/"]').href.split('/status/').pop().split('/').shift();
@@ -904,10 +923,11 @@ class UIManager {
                 btn_down.classList.add('tmd-down', 'tmd-img');
                 this.setButtonStatus(btn_down, 'download');
                 img.parentNode.appendChild(btn_down);
+
                 btn_down.onclick = e => {
                     e.preventDefault();
-                    this.app.handleDownloadClick(btn_down, status_id, is_exist, index);
- 
+                    this.app.handleDownloadClick(btn_down, status_id, is_exist, null, retweeter_name, retweeter_id);
+
                     if (this.app.storage.autoBookmarkFlag) {
                         // let bookmarkBtn = article.querySelector('[data-testid="bookmark"]');
                         let bookmarkBtn = btn_share.parentNode.querySelector('button[data-testid="bookmark"]');
@@ -919,22 +939,22 @@ class UIManager {
             });
         }
     }
- 
+
     addButtonsToMediaList(listitems) {
         listitems.forEach(li => {
             if (li.dataset.tmdDetected === 'true') return;
             let statusLink = li.querySelector('a[href*="/status/"]');
             if (!statusLink || !statusLink.href) return;
             li.dataset.tmdDetected = 'true';
- 
+
             let status_id = statusLink.href.split('/status/').pop().split(/[\/\?#]/).shift();
             let is_exist = this.app.storage.isDownloaded(status_id);
- 
+
             let btn_down = document.createElement('div');
             btn_down.innerHTML = `<div><div><svg viewBox="0 0 24 24" style="width: 18px; height: 18px;">${Config.svg}</svg></div></div>`;
             btn_down.classList.add('tmd-down', 'tmd-media');
             this.setButtonStatus(btn_down, is_exist ? 'exist' : 'download', is_exist ? this.lang.completed : this.lang.download);
- 
+
             li.appendChild(btn_down);
             btn_down.onclick = (e) => {
                 e.preventDefault();
@@ -944,8 +964,8 @@ class UIManager {
         });
     }
 }
- 
- 
+
+
 class TwitterMediaDownloaderApp {
     constructor() {
         this.storage = new StorageManager();
@@ -953,30 +973,30 @@ class TwitterMediaDownloaderApp {
         this.ui = new UIManager(this);
         this.isTweetDeck = location.hostname.includes('tweetdeck');
     }
- 
+
     async init() {
         await this.storage.init();
         this.ui.injectCSS();
         this.ui.renderHistoryUI();
- 
+
         document.addEventListener('mouseover', e => {
             let container = e.target.closest('article') || e.target.closest('[role="dialog"]') || e.target.closest('div[aria-labelledby]');
             if (container) window.tmdHoveredContainer = container;
         });
- 
+
         document.addEventListener('keydown', e => {
             if (['INPUT', 'TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable) return;
- 
+
             if (this.storage.shortcutKey && e.key.toUpperCase() === this.storage.shortcutKey.toUpperCase()) {
                 let container = window.tmdHoveredContainer;
- 
+
                 if (!container || !document.body.contains(container)) {
                     container = document.querySelector('[role="dialog"]') || document.querySelector('article');
                 }
- 
+
                 if (container) {
                     let btn = container.querySelector('.tmd-img:hover') || container.querySelector('.tmd-media:hover') || container.querySelector('.tmd-down');
- 
+
                     if (btn && !btn.classList.contains('loading')) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -989,7 +1009,7 @@ class TwitterMediaDownloaderApp {
                 }
             }
         });
- 
+
         new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(node => {
             let article = node.tagName === 'ARTICLE' && node || node.tagName === 'DIV' && (node.querySelector('article') || node.closest('article'));
             if (article) this.ui.addButtonsToArticle(article);
@@ -997,13 +1017,13 @@ class TwitterMediaDownloaderApp {
             if (listitems) this.ui.addButtonsToMediaList(listitems);
         }))).observe(document.body, { childList: true, subtree: true });
     }
- 
-    async handleDownloadClick(btn, status_id, is_exist, index) {
+
+    async handleDownloadClick(btn, status_id, is_exist, index, retweeter_name = 'unknown', retweeter_id = 'unknown') {
         if (btn.classList.contains('loading')) return;
         this.ui.setButtonStatus(btn, 'loading');
- 
+
         let out = this.storage.filenamePattern.split('\n').join('');
- 
+
         let tweet;
         try {
             tweet = await TwitterAPI.fetchTweetJson(status_id);
@@ -1011,64 +1031,68 @@ class TwitterMediaDownloaderApp {
             this.ui.setButtonStatus(btn, 'failed', 'API_ERROR');
             return;
         }
- 
+
         if (!tweet || !tweet.legacy) {
             this.ui.setButtonStatus(btn, 'failed', 'API_ERROR');
             return;
         }
- 
+
         let user = tweet.core?.user_results?.result?.legacy || { screen_name: 'unknown', name: 'unknown' };
         let invalid = Utils.getInvalidChars();
         let datetime = out.match(/{date-time(-local)?:[^{}]+}/) ? out.match(/{date-time(?:-local)?:([^{}]+)}/)[1].replace(/[\\/|<>*?:"]/g, v => invalid[v] || '') : 'YYYYMMDD-hhmmss';
         let textLength = out.match(/{full-text:(\d+)}/) ? parseInt(out.match(/{full-text:(\d+)}/)[1], 10) : 999;
- 
+
         let info = {
-            'status-id': status_id, 'user-id': user.screen_name, 'fav-count': tweet.legacy.favorite_count || 0,
+            'status-id': status_id,
+            'user-id': user.screen_name,
+            'fav-count': tweet.legacy.favorite_count || 0,
             'user-name': user.name.replace(/[\n\t\\/|<>*?:"]|[\u200b-\u200d\u2060\ufeff]|🔞/g, v => invalid[v] !== undefined ? invalid[v] : ''),
             'date-time': Utils.formatDate(tweet.legacy.created_at, datetime),
             'date-time-local': Utils.formatDate(tweet.legacy.created_at, datetime, true),
-            'full-text': (tweet.legacy.full_text || '').replace(/\s*https:\/\/t\.co\/\w+/g, '').replaceAll(/\n+/g, '\n').replace(/[\n\t\\/|<>*?:"]|[\u200b-\u200d\u2060\ufeff]/g, v => invalid[v] !== undefined ? invalid[v] : '').substring(0, textLength)
+            'full-text': (tweet.legacy.full_text || '').replace(/\s*https:\/\/t\.co\/\w+/g, '').replaceAll(/\n+/g, '\n').replace(/[\n\t\\/|<>*?:"]|[\u200b-\u200d\u2060\ufeff]/g, v => invalid[v] !== undefined ? invalid[v] : '').substring(0, textLength),
+            'rt-user-name': retweeter_name.replace(/[\n\t\\/|<>*?:"]|[\u200b-\u200d\u2060\ufeff]|🔞/g, v => invalid[v] !== undefined ? invalid[v] : ''),
+            'rt-user-id': retweeter_id ? retweeter_id : 'unknown'
         };
- 
+
         let medias = tweet.legacy.extended_entities?.media || [];
         info['media-count'] = medias.length;
- 
+
         if (index) {
             let idx = parseInt(index, 10) - 1;
             medias = medias[idx] ? [medias[idx]] : [];
         }
- 
+
         if (medias.length > 0) {
             let tasksLeft = medias.length;
             let totalBytes = 0;
             let fetchSizePromises = [];
- 
+
             medias.forEach((media, i) => {
                 let mp4Variants = media.video_info?.variants?.filter(n => n.content_type === 'video/mp4') || [];
                 info.url = media.type === 'photo'
                     ? media.media_url_https + ':orig'
                     : (mp4Variants.length > 0 ? mp4Variants.reduce((a, b) => (a.bitrate || 0) >= (b.bitrate || 0) ? a : b).url : media.video_info?.variants[0]?.url);
- 
+
                 if (!info.url) {
                     if (--tasksLeft === 0) this.ui.setButtonStatus(btn, 'failed', 'NO_URL');
                     return;
                 }
- 
+
                 let sizePromise = fetch(info.url, { method: 'HEAD' }).then(res => {
                     let cl = res.headers.get('content-length');
                     if (cl) totalBytes += parseInt(cl, 10);
                 }).catch(() => { });
                 fetchSizePromises.push(sizePromise);
- 
+
                 info.file = info.url.split('/').pop().split(/[:?]/)[0];
                 info['file-name'] = info.file.split('.')[0];
                 info['file-ext'] = info.file.split('.').pop();
                 info['file-type'] = media.type.replace('animated_', '');
                 info.index = index ? index : (i + 1);
- 
+
                 info.out = (out.replace(/\.?{file-ext}/, '') + ((medias.length > 1 || index) && !out.includes('{index}') && !out.includes('{file-name}') ? '-' + info.index : '') + '.{file-ext}')
                     .replace(/{([^{}:]+)(:[^{}]+)?}/g, (_, name) => info[name] != null ? info[name] : '');
- 
+
                 this.queue.add({
                     url: info.url, name: info.out,
                     onload: async () => {
@@ -1077,7 +1101,7 @@ class TwitterMediaDownloaderApp {
                             if (this.storage.saveHistoryFlag && !is_exist) {
                                 await Promise.all(fetchSizePromises);
                                 let sizeStr = totalBytes > 0 ? (totalBytes / (1024 * 1024)).toFixed(2) + ' MB' : 'Unknown';
- 
+
                                 await this.storage.addHistory({
                                     id: status_id,
                                     user: info['user-name'],
@@ -1098,5 +1122,5 @@ class TwitterMediaDownloaderApp {
         }
     }
 }
- 
+
 new TwitterMediaDownloaderApp().init();
