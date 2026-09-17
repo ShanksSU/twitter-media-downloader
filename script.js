@@ -3,13 +3,13 @@
 // @name:ja      Twitter/X メディアダウンローダー
 // @name:zh-CN   Twitter/X 媒体下载器
 // @name:zh-TW   Twitter/X 媒體下載器
-// @description        One-click download of images/videos from Twitter/X, with custom filenames and history.
+// @description        Download Twitter/X media, save animated GIFs, and optionally convert videos up to 10 seconds to GIF locally.
 // @description:ja     Twitter/Xの画像や動画をワンクリックでダウンロード。カスタムファイル名や履歴に対応。
-// @description:zh-CN  一键下载 Twitter/X 图片和视频，支持自定义文件名和下载历史记录。
+// @description:zh-CN  下载 Twitter/X 图片、视频和 GIF 动图；支持将 10 秒以内的短视频在本地转为 GIF。
 // @description:zh-TW  一鍵下載 Twitter/X 圖片和影片，支援自訂檔名與下載歷史紀錄。
 // @author      ShanksSU
 // @namespace    https://github.com/ShanksSU/twitter-media-downloader
-// @version     0.3.0
+// @version     0.3.3
 // @match       https://twitter.com/*
 // @match       https://x.com/*
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=x.com
@@ -34,6 +34,11 @@ class Config {
 
     static media_btn_css = `
         .tmd-down {margin-left: 12px; order: 99; position: relative;}
+        button.tmd-gif {align-self: center; border: 1px solid #536471; border-radius: 12px; padding: 3px 7px; background: transparent; color: #536471; font: bold 11px sans-serif; cursor: pointer;}
+        button.tmd-gif.tmd-media {right: 38px; top: 2px; background: #15202b; color: #fff;}
+        button.tmd-gif.completed {color: #00ba7c; border-color: #00ba7c;}
+        button.tmd-gif.failed {color: #f4212e; border-color: #f4212e;}
+        .tmd-notice {position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 10001; max-width: 85vw; padding: 12px 18px; border-radius: 8px; background: #15202b; color: #fff; font: 14px sans-serif; box-shadow: 0 2px 12px #0005;}
         .tmd-down:hover > div > div > div > div {color: #FFD700;}
         .tmd-down:hover > div > div > div > div > div {background-color: rgba(255, 215, 0, 0.1);}
         .tmd-down:active > div > div > div > div > div {background-color: rgba(255, 215, 0, 0.2);}
@@ -49,6 +54,7 @@ class Config {
         .tmd-down g {display: none;}
         .tmd-down.download g.download, .tmd-down.completed g.completed, .tmd-down.exist g.completed, .tmd-down.loading g.loading,.tmd-down.failed g.failed {display: unset;}
         .tmd-down.exist svg {color: #FFD700;}
+        .tmd-down.loading[data-tmd-progress]::before {content: attr(data-tmd-progress); position: absolute; bottom: 100%; right: 0; padding: 3px 5px; border-radius: 4px; background: #15202b; color: #fff; font: 11px sans-serif; white-space: nowrap; pointer-events: none;}
         .tmd-down.loading svg {animation: spin 1s linear infinite; color: #FFD700;}
         @keyframes spin {0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);}}
         @keyframes tmd-pop-anim {
@@ -403,6 +409,985 @@ class TwitterAPI {
 }
 
 
+/* Bundled gifenc 1.0.3 — https://github.com/mattdesl/gifenc
+The MIT License (MIT)
+Copyright (c) 2017 Matt DesLauriers
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+*/
+const TmdGifenc = (() => {
+const module = { exports: {} };
+const exports = module.exports;
+var __defProp = Object.defineProperty;
+var __markAsModule = (target) => __defProp(target, "__esModule", {value: true});
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {get: all[name], enumerable: true});
+};
+
+// src/index.js
+__markAsModule(exports);
+__export(exports, {
+  GIFEncoder: () => GIFEncoder,
+  applyPalette: () => applyPalette,
+  default: () => src_default,
+  nearestColor: () => nearestColor,
+  nearestColorIndex: () => nearestColorIndex,
+  nearestColorIndexWithDistance: () => nearestColorIndexWithDistance,
+  prequantize: () => prequantize,
+  quantize: () => quantize,
+  snapColorsToPalette: () => snapColorsToPalette
+});
+
+// src/constants.js
+var constants_default = {
+  signature: "GIF",
+  version: "89a",
+  trailer: 59,
+  extensionIntroducer: 33,
+  applicationExtensionLabel: 255,
+  graphicControlExtensionLabel: 249,
+  imageSeparator: 44,
+  signatureSize: 3,
+  versionSize: 3,
+  globalColorTableFlagMask: 128,
+  colorResolutionMask: 112,
+  sortFlagMask: 8,
+  globalColorTableSizeMask: 7,
+  applicationIdentifierSize: 8,
+  applicationAuthCodeSize: 3,
+  disposalMethodMask: 28,
+  userInputFlagMask: 2,
+  transparentColorFlagMask: 1,
+  localColorTableFlagMask: 128,
+  interlaceFlagMask: 64,
+  idSortFlagMask: 32,
+  localColorTableSizeMask: 7
+};
+
+// src/stream.js
+function createStream(initialCapacity = 256) {
+  let cursor = 0;
+  let contents = new Uint8Array(initialCapacity);
+  return {
+    get buffer() {
+      return contents.buffer;
+    },
+    reset() {
+      cursor = 0;
+    },
+    bytesView() {
+      return contents.subarray(0, cursor);
+    },
+    bytes() {
+      return contents.slice(0, cursor);
+    },
+    writeByte(byte) {
+      expand(cursor + 1);
+      contents[cursor] = byte;
+      cursor++;
+    },
+    writeBytes(data, offset = 0, byteLength = data.length) {
+      expand(cursor + byteLength);
+      for (let i = 0; i < byteLength; i++) {
+        contents[cursor++] = data[i + offset];
+      }
+    },
+    writeBytesView(data, offset = 0, byteLength = data.byteLength) {
+      expand(cursor + byteLength);
+      contents.set(data.subarray(offset, offset + byteLength), cursor);
+      cursor += byteLength;
+    }
+  };
+  function expand(newCapacity) {
+    var prevCapacity = contents.length;
+    if (prevCapacity >= newCapacity)
+      return;
+    var CAPACITY_DOUBLING_MAX = 1024 * 1024;
+    newCapacity = Math.max(newCapacity, prevCapacity * (prevCapacity < CAPACITY_DOUBLING_MAX ? 2 : 1.125) >>> 0);
+    if (prevCapacity != 0)
+      newCapacity = Math.max(newCapacity, 256);
+    const oldContents = contents;
+    contents = new Uint8Array(newCapacity);
+    if (cursor > 0)
+      contents.set(oldContents.subarray(0, cursor), 0);
+  }
+}
+
+// src/lzwEncode.js
+var BITS = 12;
+var DEFAULT_HSIZE = 5003;
+var MASKS = [
+  0,
+  1,
+  3,
+  7,
+  15,
+  31,
+  63,
+  127,
+  255,
+  511,
+  1023,
+  2047,
+  4095,
+  8191,
+  16383,
+  32767,
+  65535
+];
+function lzwEncode(width, height, pixels, colorDepth, outStream = createStream(512), accum = new Uint8Array(256), htab = new Int32Array(DEFAULT_HSIZE), codetab = new Int32Array(DEFAULT_HSIZE)) {
+  const hsize = htab.length;
+  const initCodeSize = Math.max(2, colorDepth);
+  accum.fill(0);
+  codetab.fill(0);
+  htab.fill(-1);
+  let cur_accum = 0;
+  let cur_bits = 0;
+  const init_bits = initCodeSize + 1;
+  const g_init_bits = init_bits;
+  let clear_flg = false;
+  let n_bits = g_init_bits;
+  let maxcode = (1 << n_bits) - 1;
+  const ClearCode = 1 << init_bits - 1;
+  const EOFCode = ClearCode + 1;
+  let free_ent = ClearCode + 2;
+  let a_count = 0;
+  let ent = pixels[0];
+  let hshift = 0;
+  for (let fcode = hsize; fcode < 65536; fcode *= 2) {
+    ++hshift;
+  }
+  hshift = 8 - hshift;
+  outStream.writeByte(initCodeSize);
+  output(ClearCode);
+  const length = pixels.length;
+  for (let idx = 1; idx < length; idx++) {
+    next_block: {
+      const c = pixels[idx];
+      const fcode = (c << BITS) + ent;
+      let i = c << hshift ^ ent;
+      if (htab[i] === fcode) {
+        ent = codetab[i];
+        break next_block;
+      }
+      const disp = i === 0 ? 1 : hsize - i;
+      while (htab[i] >= 0) {
+        i -= disp;
+        if (i < 0)
+          i += hsize;
+        if (htab[i] === fcode) {
+          ent = codetab[i];
+          break next_block;
+        }
+      }
+      output(ent);
+      ent = c;
+      if (free_ent < 1 << BITS) {
+        codetab[i] = free_ent++;
+        htab[i] = fcode;
+      } else {
+        htab.fill(-1);
+        free_ent = ClearCode + 2;
+        clear_flg = true;
+        output(ClearCode);
+      }
+    }
+  }
+  output(ent);
+  output(EOFCode);
+  outStream.writeByte(0);
+  return outStream.bytesView();
+  function output(code) {
+    cur_accum &= MASKS[cur_bits];
+    if (cur_bits > 0)
+      cur_accum |= code << cur_bits;
+    else
+      cur_accum = code;
+    cur_bits += n_bits;
+    while (cur_bits >= 8) {
+      accum[a_count++] = cur_accum & 255;
+      if (a_count >= 254) {
+        outStream.writeByte(a_count);
+        outStream.writeBytesView(accum, 0, a_count);
+        a_count = 0;
+      }
+      cur_accum >>= 8;
+      cur_bits -= 8;
+    }
+    if (free_ent > maxcode || clear_flg) {
+      if (clear_flg) {
+        n_bits = g_init_bits;
+        maxcode = (1 << n_bits) - 1;
+        clear_flg = false;
+      } else {
+        ++n_bits;
+        maxcode = n_bits === BITS ? 1 << n_bits : (1 << n_bits) - 1;
+      }
+    }
+    if (code == EOFCode) {
+      while (cur_bits > 0) {
+        accum[a_count++] = cur_accum & 255;
+        if (a_count >= 254) {
+          outStream.writeByte(a_count);
+          outStream.writeBytesView(accum, 0, a_count);
+          a_count = 0;
+        }
+        cur_accum >>= 8;
+        cur_bits -= 8;
+      }
+      if (a_count > 0) {
+        outStream.writeByte(a_count);
+        outStream.writeBytesView(accum, 0, a_count);
+        a_count = 0;
+      }
+    }
+  }
+}
+var lzwEncode_default = lzwEncode;
+
+// src/rgb-packing.js
+function rgb888_to_rgb565(r, g, b) {
+  return r << 8 & 63488 | g << 2 & 992 | b >> 3;
+}
+function rgba8888_to_rgba4444(r, g, b, a) {
+  return r >> 4 | g & 240 | (b & 240) << 4 | (a & 240) << 8;
+}
+function rgb888_to_rgb444(r, g, b) {
+  return r >> 4 << 8 | g & 240 | b >> 4;
+}
+
+// src/pnnquant2.js
+function clamp(value, min, max) {
+  return value < min ? min : value > max ? max : value;
+}
+function sqr(value) {
+  return value * value;
+}
+function find_nn(bins, idx, hasAlpha) {
+  var nn = 0;
+  var err = 1e100;
+  const bin1 = bins[idx];
+  const n1 = bin1.cnt;
+  const wa = bin1.ac;
+  const wr = bin1.rc;
+  const wg = bin1.gc;
+  const wb = bin1.bc;
+  for (var i = bin1.fw; i != 0; i = bins[i].fw) {
+    const bin = bins[i];
+    const n2 = bin.cnt;
+    const nerr2 = n1 * n2 / (n1 + n2);
+    if (nerr2 >= err)
+      continue;
+    var nerr = 0;
+    if (hasAlpha) {
+      nerr += nerr2 * sqr(bin.ac - wa);
+      if (nerr >= err)
+        continue;
+    }
+    nerr += nerr2 * sqr(bin.rc - wr);
+    if (nerr >= err)
+      continue;
+    nerr += nerr2 * sqr(bin.gc - wg);
+    if (nerr >= err)
+      continue;
+    nerr += nerr2 * sqr(bin.bc - wb);
+    if (nerr >= err)
+      continue;
+    err = nerr;
+    nn = i;
+  }
+  bin1.err = err;
+  bin1.nn = nn;
+}
+function create_bin() {
+  return {
+    ac: 0,
+    rc: 0,
+    gc: 0,
+    bc: 0,
+    cnt: 0,
+    nn: 0,
+    fw: 0,
+    bk: 0,
+    tm: 0,
+    mtm: 0,
+    err: 0
+  };
+}
+function create_bin_list(data, format) {
+  const bincount = format === "rgb444" ? 4096 : 65536;
+  const bins = new Array(bincount);
+  const size = data.length;
+  if (format === "rgba4444") {
+    for (let i = 0; i < size; ++i) {
+      const color = data[i];
+      const a = color >> 24 & 255;
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const index = rgba8888_to_rgba4444(r, g, b, a);
+      let bin = index in bins ? bins[index] : bins[index] = create_bin();
+      bin.rc += r;
+      bin.gc += g;
+      bin.bc += b;
+      bin.ac += a;
+      bin.cnt++;
+    }
+  } else if (format === "rgb444") {
+    for (let i = 0; i < size; ++i) {
+      const color = data[i];
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const index = rgb888_to_rgb444(r, g, b);
+      let bin = index in bins ? bins[index] : bins[index] = create_bin();
+      bin.rc += r;
+      bin.gc += g;
+      bin.bc += b;
+      bin.cnt++;
+    }
+  } else {
+    for (let i = 0; i < size; ++i) {
+      const color = data[i];
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const index = rgb888_to_rgb565(r, g, b);
+      let bin = index in bins ? bins[index] : bins[index] = create_bin();
+      bin.rc += r;
+      bin.gc += g;
+      bin.bc += b;
+      bin.cnt++;
+    }
+  }
+  return bins;
+}
+function quantize(rgba, maxColors, opts = {}) {
+  const {
+    format = "rgb565",
+    clearAlpha = true,
+    clearAlphaColor = 0,
+    clearAlphaThreshold = 0,
+    oneBitAlpha = false
+  } = opts;
+  if (!rgba || !rgba.buffer) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  if (!(rgba instanceof Uint8Array) && !(rgba instanceof Uint8ClampedArray)) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  const data = new Uint32Array(rgba.buffer);
+  let useSqrt = opts.useSqrt !== false;
+  const hasAlpha = format === "rgba4444";
+  const bins = create_bin_list(data, format);
+  const bincount = bins.length;
+  const bincountMinusOne = bincount - 1;
+  const heap = new Uint32Array(bincount + 1);
+  var maxbins = 0;
+  for (var i = 0; i < bincount; ++i) {
+    const bin = bins[i];
+    if (bin != null) {
+      var d = 1 / bin.cnt;
+      if (hasAlpha)
+        bin.ac *= d;
+      bin.rc *= d;
+      bin.gc *= d;
+      bin.bc *= d;
+      bins[maxbins++] = bin;
+    }
+  }
+  if (sqr(maxColors) / maxbins < 0.022) {
+    useSqrt = false;
+  }
+  var i = 0;
+  for (; i < maxbins - 1; ++i) {
+    bins[i].fw = i + 1;
+    bins[i + 1].bk = i;
+    if (useSqrt)
+      bins[i].cnt = Math.sqrt(bins[i].cnt);
+  }
+  if (useSqrt)
+    bins[i].cnt = Math.sqrt(bins[i].cnt);
+  var h, l, l2;
+  for (i = 0; i < maxbins; ++i) {
+    find_nn(bins, i, false);
+    var err = bins[i].err;
+    for (l = ++heap[0]; l > 1; l = l2) {
+      l2 = l >> 1;
+      if (bins[h = heap[l2]].err <= err)
+        break;
+      heap[l] = h;
+    }
+    heap[l] = i;
+  }
+  var extbins = maxbins - maxColors;
+  for (i = 0; i < extbins; ) {
+    var tb;
+    for (; ; ) {
+      var b1 = heap[1];
+      tb = bins[b1];
+      if (tb.tm >= tb.mtm && bins[tb.nn].mtm <= tb.tm)
+        break;
+      if (tb.mtm == bincountMinusOne)
+        b1 = heap[1] = heap[heap[0]--];
+      else {
+        find_nn(bins, b1, false);
+        tb.tm = i;
+      }
+      var err = bins[b1].err;
+      for (l = 1; (l2 = l + l) <= heap[0]; l = l2) {
+        if (l2 < heap[0] && bins[heap[l2]].err > bins[heap[l2 + 1]].err)
+          l2++;
+        if (err <= bins[h = heap[l2]].err)
+          break;
+        heap[l] = h;
+      }
+      heap[l] = b1;
+    }
+    var nb = bins[tb.nn];
+    var n1 = tb.cnt;
+    var n2 = nb.cnt;
+    var d = 1 / (n1 + n2);
+    if (hasAlpha)
+      tb.ac = d * (n1 * tb.ac + n2 * nb.ac);
+    tb.rc = d * (n1 * tb.rc + n2 * nb.rc);
+    tb.gc = d * (n1 * tb.gc + n2 * nb.gc);
+    tb.bc = d * (n1 * tb.bc + n2 * nb.bc);
+    tb.cnt += nb.cnt;
+    tb.mtm = ++i;
+    bins[nb.bk].fw = nb.fw;
+    bins[nb.fw].bk = nb.bk;
+    nb.mtm = bincountMinusOne;
+  }
+  let palette = [];
+  var k = 0;
+  for (i = 0; ; ++k) {
+    let r = clamp(Math.round(bins[i].rc), 0, 255);
+    let g = clamp(Math.round(bins[i].gc), 0, 255);
+    let b = clamp(Math.round(bins[i].bc), 0, 255);
+    let a = 255;
+    if (hasAlpha) {
+      a = clamp(Math.round(bins[i].ac), 0, 255);
+      if (oneBitAlpha) {
+        const threshold = typeof oneBitAlpha === "number" ? oneBitAlpha : 127;
+        a = a <= threshold ? 0 : 255;
+      }
+      if (clearAlpha && a <= clearAlphaThreshold) {
+        r = g = b = clearAlphaColor;
+        a = 0;
+      }
+    }
+    const color = hasAlpha ? [r, g, b, a] : [r, g, b];
+    const exists = existsInPalette(palette, color);
+    if (!exists)
+      palette.push(color);
+    if ((i = bins[i].fw) == 0)
+      break;
+  }
+  return palette;
+}
+function existsInPalette(palette, color) {
+  for (let i = 0; i < palette.length; i++) {
+    const p = palette[i];
+    let matchesRGB = p[0] === color[0] && p[1] === color[1] && p[2] === color[2];
+    let matchesAlpha = p.length >= 4 && color.length >= 4 ? p[3] === color[3] : true;
+    if (matchesRGB && matchesAlpha)
+      return true;
+  }
+  return false;
+}
+
+// src/color.js
+function euclideanDistanceSquared(a, b) {
+  var sum = 0;
+  var n;
+  for (n = 0; n < a.length; n++) {
+    const dx = a[n] - b[n];
+    sum += dx * dx;
+  }
+  return sum;
+}
+
+// src/palettize.js
+function roundStep(byte, step) {
+  return step > 1 ? Math.round(byte / step) * step : byte;
+}
+function prequantize(rgba, {roundRGB = 5, roundAlpha = 10, oneBitAlpha = null} = {}) {
+  const data = new Uint32Array(rgba.buffer);
+  for (let i = 0; i < data.length; i++) {
+    const color = data[i];
+    let a = color >> 24 & 255;
+    let b = color >> 16 & 255;
+    let g = color >> 8 & 255;
+    let r = color & 255;
+    a = roundStep(a, roundAlpha);
+    if (oneBitAlpha) {
+      const threshold = typeof oneBitAlpha === "number" ? oneBitAlpha : 127;
+      a = a <= threshold ? 0 : 255;
+    }
+    r = roundStep(r, roundRGB);
+    g = roundStep(g, roundRGB);
+    b = roundStep(b, roundRGB);
+    data[i] = a << 24 | b << 16 | g << 8 | r << 0;
+  }
+}
+function applyPalette(rgba, palette, format = "rgb565") {
+  if (!rgba || !rgba.buffer) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  if (!(rgba instanceof Uint8Array) && !(rgba instanceof Uint8ClampedArray)) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  if (palette.length > 256) {
+    throw new Error("applyPalette() only works with 256 colors or less");
+  }
+  const data = new Uint32Array(rgba.buffer);
+  const length = data.length;
+  const bincount = format === "rgb444" ? 4096 : 65536;
+  const index = new Uint8Array(length);
+  const cache = new Array(bincount);
+  const hasAlpha = format === "rgba4444";
+  if (format === "rgba4444") {
+    for (let i = 0; i < length; i++) {
+      const color = data[i];
+      const a = color >> 24 & 255;
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const key = rgba8888_to_rgba4444(r, g, b, a);
+      const idx = key in cache ? cache[key] : cache[key] = nearestColorIndexRGBA(r, g, b, a, palette);
+      index[i] = idx;
+    }
+  } else {
+    const rgb888_to_key = format === "rgb444" ? rgb888_to_rgb444 : rgb888_to_rgb565;
+    for (let i = 0; i < length; i++) {
+      const color = data[i];
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const key = rgb888_to_key(r, g, b);
+      const idx = key in cache ? cache[key] : cache[key] = nearestColorIndexRGB(r, g, b, palette);
+      index[i] = idx;
+    }
+  }
+  return index;
+}
+function nearestColorIndexRGBA(r, g, b, a, palette) {
+  let k = 0;
+  let mindist = 1e100;
+  for (let i = 0; i < palette.length; i++) {
+    const px2 = palette[i];
+    const a2 = px2[3];
+    let curdist = sqr2(a2 - a);
+    if (curdist > mindist)
+      continue;
+    const r2 = px2[0];
+    curdist += sqr2(r2 - r);
+    if (curdist > mindist)
+      continue;
+    const g2 = px2[1];
+    curdist += sqr2(g2 - g);
+    if (curdist > mindist)
+      continue;
+    const b2 = px2[2];
+    curdist += sqr2(b2 - b);
+    if (curdist > mindist)
+      continue;
+    mindist = curdist;
+    k = i;
+  }
+  return k;
+}
+function nearestColorIndexRGB(r, g, b, palette) {
+  let k = 0;
+  let mindist = 1e100;
+  for (let i = 0; i < palette.length; i++) {
+    const px2 = palette[i];
+    const r2 = px2[0];
+    let curdist = sqr2(r2 - r);
+    if (curdist > mindist)
+      continue;
+    const g2 = px2[1];
+    curdist += sqr2(g2 - g);
+    if (curdist > mindist)
+      continue;
+    const b2 = px2[2];
+    curdist += sqr2(b2 - b);
+    if (curdist > mindist)
+      continue;
+    mindist = curdist;
+    k = i;
+  }
+  return k;
+}
+function snapColorsToPalette(palette, knownColors, threshold = 5) {
+  if (!palette.length || !knownColors.length)
+    return;
+  const paletteRGB = palette.map((p) => p.slice(0, 3));
+  const thresholdSq = threshold * threshold;
+  const dim = palette[0].length;
+  for (let i = 0; i < knownColors.length; i++) {
+    let color = knownColors[i];
+    if (color.length < dim) {
+      color = [color[0], color[1], color[2], 255];
+    } else if (color.length > dim) {
+      color = color.slice(0, 3);
+    } else {
+      color = color.slice();
+    }
+    const r = nearestColorIndexWithDistance(paletteRGB, color.slice(0, 3), euclideanDistanceSquared);
+    const idx = r[0];
+    const distanceSq = r[1];
+    if (distanceSq > 0 && distanceSq <= thresholdSq) {
+      palette[idx] = color;
+    }
+  }
+}
+function sqr2(a) {
+  return a * a;
+}
+function nearestColorIndex(colors, pixel, distanceFn = euclideanDistanceSquared) {
+  let minDist = Infinity;
+  let minDistIndex = -1;
+  for (let j = 0; j < colors.length; j++) {
+    const paletteColor = colors[j];
+    const dist = distanceFn(pixel, paletteColor);
+    if (dist < minDist) {
+      minDist = dist;
+      minDistIndex = j;
+    }
+  }
+  return minDistIndex;
+}
+function nearestColorIndexWithDistance(colors, pixel, distanceFn = euclideanDistanceSquared) {
+  let minDist = Infinity;
+  let minDistIndex = -1;
+  for (let j = 0; j < colors.length; j++) {
+    const paletteColor = colors[j];
+    const dist = distanceFn(pixel, paletteColor);
+    if (dist < minDist) {
+      minDist = dist;
+      minDistIndex = j;
+    }
+  }
+  return [minDistIndex, minDist];
+}
+function nearestColor(colors, pixel, distanceFn = euclideanDistanceSquared) {
+  return colors[nearestColorIndex(colors, pixel, distanceFn)];
+}
+
+// src/index.js
+function GIFEncoder(opt = {}) {
+  const {initialCapacity = 4096, auto = true} = opt;
+  const stream = createStream(initialCapacity);
+  const HSIZE = 5003;
+  const accum = new Uint8Array(256);
+  const htab = new Int32Array(HSIZE);
+  const codetab = new Int32Array(HSIZE);
+  let hasInit = false;
+  return {
+    reset() {
+      stream.reset();
+      hasInit = false;
+    },
+    finish() {
+      stream.writeByte(constants_default.trailer);
+    },
+    bytes() {
+      return stream.bytes();
+    },
+    bytesView() {
+      return stream.bytesView();
+    },
+    get buffer() {
+      return stream.buffer;
+    },
+    get stream() {
+      return stream;
+    },
+    writeHeader,
+    writeFrame(index, width, height, opts = {}) {
+      const {
+        transparent = false,
+        transparentIndex = 0,
+        delay = 0,
+        palette = null,
+        repeat = 0,
+        colorDepth = 8,
+        dispose = -1
+      } = opts;
+      let first = false;
+      if (auto) {
+        if (!hasInit) {
+          first = true;
+          writeHeader();
+          hasInit = true;
+        }
+      } else {
+        first = Boolean(opts.first);
+      }
+      width = Math.max(0, Math.floor(width));
+      height = Math.max(0, Math.floor(height));
+      if (first) {
+        if (!palette) {
+          throw new Error("First frame must include a { palette } option");
+        }
+        encodeLogicalScreenDescriptor(stream, width, height, palette, colorDepth);
+        encodeColorTable(stream, palette);
+        if (repeat >= 0) {
+          encodeNetscapeExt(stream, repeat);
+        }
+      }
+      const delayTime = Math.round(delay / 10);
+      encodeGraphicControlExt(stream, dispose, delayTime, transparent, transparentIndex);
+      const useLocalColorTable = Boolean(palette) && !first;
+      encodeImageDescriptor(stream, width, height, useLocalColorTable ? palette : null);
+      if (useLocalColorTable)
+        encodeColorTable(stream, palette);
+      encodePixels(stream, index, width, height, colorDepth, accum, htab, codetab);
+    }
+  };
+  function writeHeader() {
+    writeUTFBytes(stream, "GIF89a");
+  }
+}
+function encodeGraphicControlExt(stream, dispose, delay, transparent, transparentIndex) {
+  stream.writeByte(33);
+  stream.writeByte(249);
+  stream.writeByte(4);
+  if (transparentIndex < 0) {
+    transparentIndex = 0;
+    transparent = false;
+  }
+  var transp, disp;
+  if (!transparent) {
+    transp = 0;
+    disp = 0;
+  } else {
+    transp = 1;
+    disp = 2;
+  }
+  if (dispose >= 0) {
+    disp = dispose & 7;
+  }
+  disp <<= 2;
+  const userInput = 0;
+  stream.writeByte(0 | disp | userInput | transp);
+  writeUInt16(stream, delay);
+  stream.writeByte(transparentIndex || 0);
+  stream.writeByte(0);
+}
+function encodeLogicalScreenDescriptor(stream, width, height, palette, colorDepth = 8) {
+  const globalColorTableFlag = 1;
+  const sortFlag = 0;
+  const globalColorTableSize = colorTableSize(palette.length) - 1;
+  const fields = globalColorTableFlag << 7 | colorDepth - 1 << 4 | sortFlag << 3 | globalColorTableSize;
+  const backgroundColorIndex = 0;
+  const pixelAspectRatio = 0;
+  writeUInt16(stream, width);
+  writeUInt16(stream, height);
+  stream.writeBytes([fields, backgroundColorIndex, pixelAspectRatio]);
+}
+function encodeNetscapeExt(stream, repeat) {
+  stream.writeByte(33);
+  stream.writeByte(255);
+  stream.writeByte(11);
+  writeUTFBytes(stream, "NETSCAPE2.0");
+  stream.writeByte(3);
+  stream.writeByte(1);
+  writeUInt16(stream, repeat);
+  stream.writeByte(0);
+}
+function encodeColorTable(stream, palette) {
+  const colorTableLength = 1 << colorTableSize(palette.length);
+  for (let i = 0; i < colorTableLength; i++) {
+    let color = [0, 0, 0];
+    if (i < palette.length) {
+      color = palette[i];
+    }
+    stream.writeByte(color[0]);
+    stream.writeByte(color[1]);
+    stream.writeByte(color[2]);
+  }
+}
+function encodeImageDescriptor(stream, width, height, localPalette) {
+  stream.writeByte(44);
+  writeUInt16(stream, 0);
+  writeUInt16(stream, 0);
+  writeUInt16(stream, width);
+  writeUInt16(stream, height);
+  if (localPalette) {
+    const interlace = 0;
+    const sorted = 0;
+    const palSize = colorTableSize(localPalette.length) - 1;
+    stream.writeByte(128 | interlace | sorted | 0 | palSize);
+  } else {
+    stream.writeByte(0);
+  }
+}
+function encodePixels(stream, index, width, height, colorDepth = 8, accum, htab, codetab) {
+  lzwEncode_default(width, height, index, colorDepth, stream, accum, htab, codetab);
+}
+function writeUInt16(stream, short) {
+  stream.writeByte(short & 255);
+  stream.writeByte(short >> 8 & 255);
+}
+function writeUTFBytes(stream, text) {
+  for (var i = 0; i < text.length; i++) {
+    stream.writeByte(text.charCodeAt(i));
+  }
+}
+function colorTableSize(length) {
+  return Math.max(Math.ceil(Math.log2(length)), 1);
+}
+var src_default = GIFEncoder;
+
+
+return module.exports;
+})();
+
+// GIF encoding runs locally; media is never sent to a conversion service.
+class GifConverter {
+    static fps = 15;
+    static maxSide = 640;
+    static maxSeconds = 120;
+    static maxBytes = 100 * 1024 * 1024;
+    static tail = Promise.resolve();
+
+    static convert(url, progress, options = {}) {
+        const job = this.tail.then(() => this.encode(url, progress, options));
+        this.tail = job.catch(() => {});
+        return job;
+    }
+
+    static waitFor(video, event, action) {
+        return new Promise((resolve, reject) => {
+            const cleanup = () => {
+                clearTimeout(timer);
+                video.removeEventListener(event, done);
+                video.removeEventListener('error', failed);
+            };
+            const done = () => { cleanup(); resolve(); };
+            const failed = () => { cleanup(); reject(new Error('GIF: video decoding failed / 视频解码失败')); };
+            const timer = setTimeout(() => {
+                cleanup();
+                reject(new Error('GIF: video decoding timed out / 视频解码超时'));
+            }, 30000);
+            video.addEventListener(event, done, { once: true });
+            video.addEventListener('error', failed, { once: true });
+            try { action(); } catch (error) { cleanup(); reject(error); }
+        });
+    }
+
+    static validateDuration(duration, maxSeconds = this.maxSeconds) {
+        if (!Number.isFinite(duration) || duration <= 0) {
+            throw new Error('GIF: invalid video duration / 无法读取视频时长');
+        }
+        if (duration > maxSeconds) {
+            throw new Error(`GIF: exceeds ${maxSeconds}s conversion limit / 仅支持 ${maxSeconds} 秒以内的视频`);
+        }
+    }
+
+    static async encode(url, progress = () => {}, options = {}) {
+        progress('GIF ↓');
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 90000);
+        let source;
+        try {
+            const response = await fetch(url, { signal: controller.signal, credentials: 'omit' });
+            if (!response.ok) throw new Error(`GIF: HTTP ${response.status}`);
+            if (Number(response.headers.get('content-length')) > this.maxBytes) {
+                throw new Error('GIF: source exceeds 100 MB / 源文件超过 100 MB');
+            }
+            source = await response.blob();
+            if (source.size > this.maxBytes) throw new Error('GIF: source exceeds 100 MB / 源文件超过 100 MB');
+        } finally { clearTimeout(timer); }
+
+        const signature = await source.slice(0, 6).text();
+        if (signature === 'GIF87a' || signature === 'GIF89a') {
+            if (options.requireVideo) throw new Error('GIF: expected a video source / 需要视频源文件');
+            progress('GIF 100%');
+            return new Blob([source], { type: 'image/gif' });
+        }
+
+        const sourceUrl = URL.createObjectURL(source);
+        const video = document.createElement('video');
+        const canvas = document.createElement('canvas');
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.style.cssText = 'position:fixed;left:-10000px;width:1px;height:1px;pointer-events:none';
+        document.body.appendChild(video);
+        try {
+            await this.waitFor(video, 'loadeddata', () => { video.src = sourceUrl; video.load(); });
+            const duration = video.duration;
+            if (!Number.isFinite(duration) || duration <= 0 || !video.videoWidth || !video.videoHeight) {
+                throw new Error('GIF: invalid video metadata / 无效的视频信息');
+            }
+            this.validateDuration(duration, options.maxSeconds ?? this.maxSeconds);
+            const scale = Math.min(1, this.maxSide / Math.max(video.videoWidth, video.videoHeight));
+            canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+            canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            if (!context) throw new Error('GIF: Canvas unavailable');
+            const encoder = TmdGifenc.GIFEncoder();
+            const count = Math.max(1, Math.ceil(duration * this.fps));
+            // Evenly sample the entire clip. Round cumulative timing to GIF's 10 ms units.
+            for (let frame = 0; frame < count; frame++) {
+                const time = frame * duration / count;
+                if (Math.abs(video.currentTime - time) > 0.000001) {
+                    await this.waitFor(video, 'seeked', () => { video.currentTime = time; });
+                }
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+                // Use this userscript realm's typed-array constructor (Tampermonkey sandbox).
+                const rgba = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+                const palette = TmdGifenc.quantize(rgba, 256);
+                const pixels = TmdGifenc.applyPalette(rgba, palette);
+                const start = Math.round(frame * duration * 100 / count);
+                const end = Math.round((frame + 1) * duration * 100 / count);
+                encoder.writeFrame(pixels, canvas.width, canvas.height, {
+                    palette, delay: Math.max(2, end - start) * 10, repeat: 0
+                });
+                if (encoder.bytesView().byteLength > this.maxBytes) {
+                    throw new Error('GIF: output exceeds 100 MB / GIF 文件超过 100 MB');
+                }
+                progress(`GIF ${Math.round((frame + 1) / count * 100)}%`);
+                // Let the page paint between frames; only one GIF is encoded at a time.
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+            encoder.finish();
+            return new Blob([encoder.bytesView()], { type: 'image/gif' });
+        } finally {
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            video.remove();
+            URL.revokeObjectURL(sourceUrl);
+            canvas.width = canvas.height = 0;
+        }
+    }
+}
+
 class DownloadQueue {
     constructor() {
         this.tasks = [];
@@ -419,35 +1404,43 @@ class DownloadQueue {
     }
 
     async next() {
-        if (this.tasks.length === 0) {
-            this.thread--;
-            return;
-        }
-        let task = this.tasks.shift();
-        await this.start(task);
-        this.next();
+        try {
+            while (this.tasks.length) await this.start(this.tasks.shift());
+        } finally { this.thread--; }
     }
 
-    start(task) {
-        return new Promise(resolve => {
-            GM_download({
-                url: task.url,
-                name: task.name,
-                onload: () => { task.onload(); resolve(); },
-                onerror: r => { task.onerror(r); this.retry(task); resolve(); },
-                ontimeout: r => { task.onerror(r); this.retry(task); resolve(); }
-            });
-        });
-    }
+    async start(task) {
+        let objectUrl;
+        let bytes;
+        let failure;
+        try {
+            let url = task.url;
+            if (task.gif) {
+                const blob = await GifConverter.convert(url, task.onprogress, task.gifOptions);
+                bytes = blob.size;
+                objectUrl = URL.createObjectURL(blob);
+                url = objectUrl;
+            }
+            // Reuse the encoded GIF on download retries; report only the final failure.
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    await new Promise((resolve, reject) => {
+                        GM_download({ url, name: task.name, onload: resolve, onerror: reject, ontimeout: reject });
+                    });
+                    failure = null;
+                    break;
+                } catch (error) { failure = error || new Error('Download failed'); }
+            }
+        } catch (error) { failure = error; }
+        finally { if (objectUrl) URL.revokeObjectURL(objectUrl); }
 
-    retry(task) {
-        task.retry = (task.retry || 0) + 1;
-        if (task.retry <= 2) {
-            this.max_thread = 1;
-            this.tasks.push(task);
-        }
+        try {
+            if (failure) await task.onerror(failure);
+            else await task.onload(bytes);
+        } catch (error) { console.error('[TMD] Download callback failed', error); }
     }
 }
+
 
 class UIManager {
     constructor(app) {
@@ -460,11 +1453,40 @@ class UIManager {
     }
 
     setButtonStatus(btn, css, title) {
+        if (css !== 'loading') delete btn.dataset.tmdProgress;
         if (css) {
             btn.classList.remove('download', 'completed', 'exist', 'loading', 'failed');
             btn.classList.add(css);
         }
         if (title) btn.title = title;
+    }
+
+    addGifButton(downloadButton, run) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = document.documentElement.lang.startsWith('zh') ? '转 GIF' : 'GIF';
+        button.className = 'tmd-down tmd-gif download';
+        if (downloadButton.classList.contains('tmd-media')) button.classList.add('tmd-media');
+        button.title = document.documentElement.lang.startsWith('zh')
+            ? '短视频转 GIF（≤10 秒，无声音）' : 'Convert video to GIF (≤10 seconds, no audio)';
+        button.setAttribute('aria-label', button.title);
+        button.onclick = event => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!button.classList.contains('loading')) run(button);
+        };
+        downloadButton.insertAdjacentElement('afterend', button);
+    }
+
+    showNotice(message) {
+        this.notice?.remove();
+        const notice = document.createElement('div');
+        notice.className = 'tmd-notice';
+        notice.setAttribute('role', 'status');
+        notice.textContent = message;
+        document.body.appendChild(notice);
+        this.notice = notice;
+        setTimeout(() => notice.remove(), 6000);
     }
 
     renderHistoryUI() {
@@ -869,7 +1891,7 @@ class UIManager {
         let retweeter_name = '';
         let retweeter_id = '';
 
-        let media = article.querySelector(['a[href*="/photo/1"]', 'div[role="progressbar"]', 'button[data-testid="playButton"]', 'a[href="/settings/content_you_see"]', 'div.media-image-container', 'div.media-preview-container', 'div[aria-labelledby]>div:first-child>div[role="button"][tabindex="0"]'].join(','));
+        let media = article.querySelector(['video', '[data-testid="videoPlayer"]', 'a[href*="/photo/1"]', 'div[role="progressbar"]', 'button[data-testid="playButton"]', 'a[href="/settings/content_you_see"]', 'div.media-image-container', 'div.media-preview-container', 'div[aria-labelledby]>div:first-child>div[role="button"][tabindex="0"]'].join(','));
         if (media) {
             let status_id = article.querySelector('a[href*="/status/"]').href.split('/status/').pop().split('/').shift();
 
@@ -899,6 +1921,9 @@ class UIManager {
             this.setButtonStatus(btn_down, is_exist ? 'exist' : 'download', is_exist ? this.lang.completed : this.lang.download);
 
             btn_share.parentNode.insertBefore(btn_down, btn_share.nextSibling);
+            this.addGifButton(btn_down, gifButton => this.app.handleDownloadClick(
+                gifButton, status_id, is_exist, null, retweeter_name, retweeter_id, { videoGif: true }
+            ));
             btn_down.onclick = () => {
                 this.app.handleDownloadClick(btn_down, status_id, is_exist, null, retweeter_name, retweeter_id);
 
@@ -957,6 +1982,9 @@ class UIManager {
             this.setButtonStatus(btn_down, is_exist ? 'exist' : 'download', is_exist ? this.lang.completed : this.lang.download);
 
             li.appendChild(btn_down);
+            this.addGifButton(btn_down, gifButton => this.app.handleDownloadClick(
+                gifButton, status_id, is_exist, null, 'unknown', 'unknown', { videoGif: true }
+            ));
             btn_down.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1019,7 +2047,7 @@ class TwitterMediaDownloaderApp {
         }))).observe(document.body, { childList: true, subtree: true });
     }
 
-    async handleDownloadClick(btn, status_id, is_exist, index, retweeter_name = 'unknown', retweeter_id = 'unknown') {
+    async handleDownloadClick(btn, status_id, is_exist, index, retweeter_name = 'unknown', retweeter_id = 'unknown', options = {}) {
         if (btn.classList.contains('loading')) return;
         this.ui.setButtonStatus(btn, 'loading');
 
@@ -1056,6 +2084,7 @@ class TwitterMediaDownloaderApp {
         };
 
         let medias = tweet.legacy.extended_entities?.media || [];
+        const allMedias = medias;
         info['media-count'] = medias.length;
 
         if (index) {
@@ -1063,23 +2092,48 @@ class TwitterMediaDownloaderApp {
             medias = medias[idx] ? [medias[idx]] : [];
         }
 
+        // This explicit action converts videos only; the original button still downloads MP4.
+        if (options.videoGif) {
+            medias = medias.filter(media => media.type === 'video');
+            let error;
+            if (!medias.length) {
+                error = 'No video to convert / 这条帖子没有可转换的普通视频';
+            } else if (medias.some(media => Number(media.video_info?.duration_millis) > 10000)) {
+                error = 'GIF: exceeds 10s conversion limit / 仅支持 10 秒以内的视频，请使用原下载按钮保存 MP4';
+            }
+            if (error) {
+                this.ui.setButtonStatus(btn, 'failed', error);
+                this.ui.showNotice(error);
+                return;
+            }
+        }
+
         if (medias.length > 0) {
             let tasksLeft = medias.length;
+            let hasFailed = false;
             let totalBytes = 0;
             let fetchSizePromises = [];
 
+            const baseInfo = { ...info };
             medias.forEach((media, i) => {
+                const info = { ...baseInfo };
+                const isVideoGif = options.videoGif && media.type === 'video';
+                const isGif = media.type === 'animated_gif' || Boolean(isVideoGif);
                 let mp4Variants = media.video_info?.variants?.filter(n => n.content_type === 'video/mp4') || [];
+                const gifVariant = media.type === 'animated_gif' && media.video_info?.variants?.find(n => n.content_type === 'image/gif');
                 info.url = media.type === 'photo'
                     ? media.media_url_https + ':orig'
-                    : (mp4Variants.length > 0 ? mp4Variants.reduce((a, b) => (a.bitrate || 0) >= (b.bitrate || 0) ? a : b).url : media.video_info?.variants[0]?.url);
+                    : (gifVariant?.url || (mp4Variants.length > 0 ? mp4Variants.reduce((a, b) => (a.bitrate || 0) >= (b.bitrate || 0) ? a : b).url : (isGif ? null : media.video_info?.variants?.[0]?.url)));
 
                 if (!info.url) {
-                    if (--tasksLeft === 0) this.ui.setButtonStatus(btn, 'failed', 'NO_URL');
+                    hasFailed = true;
+                    tasksLeft--;
+                    this.ui.setButtonStatus(btn, 'failed', 'NO_URL');
+                    if (options.videoGif) this.ui.showNotice('No MP4 source available / 未找到可转换的 MP4 视频源');
                     return;
                 }
 
-                let sizePromise = fetch(info.url, { method: 'HEAD' }).then(res => {
+                let sizePromise = isGif ? Promise.resolve() : fetch(info.url, { method: 'HEAD', signal: AbortSignal.timeout(15000) }).then(res => {
                     let cl = res.headers.get('content-length');
                     if (cl) totalBytes += parseInt(cl, 10);
                 }).catch(() => { });
@@ -1087,17 +2141,25 @@ class TwitterMediaDownloaderApp {
 
                 info.file = info.url.split('/').pop().split(/[:?]/)[0];
                 info['file-name'] = info.file.split('.')[0];
-                info['file-ext'] = info.file.split('.').pop();
-                info['file-type'] = media.type.replace('animated_', '');
-                info.index = index ? index : (i + 1);
+                info['file-ext'] = isGif ? 'gif' : info.file.split('.').pop();
+                info['file-type'] = isGif ? 'gif' : media.type;
+                info.index = index ? index : allMedias.indexOf(media) + 1;
 
                 info.out = (out.replace(/\.?{file-ext}/, '') + ((medias.length > 1 || index) && !out.includes('{index}') && !out.includes('{file-name}') ? '-' + info.index : '') + '.{file-ext}')
                     .replace(/{([^{}:]+)(:[^{}]+)?}/g, (_, name) => info[name] != null ? info[name] : '');
 
                 this.queue.add({
-                    url: info.url, name: info.out,
-                    onload: async () => {
-                        if (--tasksLeft === 0) {
+                    url: info.url, name: info.out, gif: isGif,
+                    gifOptions: isVideoGif ? { maxSeconds: 10, requireVideo: true } : undefined,
+                    onprogress: text => {
+                        if (!hasFailed) {
+                            btn.dataset.tmdProgress = text;
+                            btn.title = text;
+                        }
+                    },
+                    onload: async bytes => {
+                        if (isGif) totalBytes += bytes || 0;
+                        if (--tasksLeft === 0 && !hasFailed) {
                             this.ui.setButtonStatus(btn, 'completed', this.ui.lang.completed);
                             if (this.storage.saveHistoryFlag && !is_exist) {
                                 await Promise.all(fetchSizePromises);
@@ -1115,7 +2177,13 @@ class TwitterMediaDownloaderApp {
                             }
                         }
                     },
-                    onerror: () => { tasksLeft = -1; this.ui.setButtonStatus(btn, 'failed', 'ERROR'); }
+                    onerror: error => {
+                        hasFailed = true;
+                        tasksLeft--;
+                        console.error('[TMD] Download failed', error);
+                        this.ui.setButtonStatus(btn, 'failed', error?.message || error?.error || 'ERROR');
+                        if (options.videoGif) this.ui.showNotice(error?.message || error?.error || 'GIF conversion failed / GIF 转换失败');
+                    }
                 });
             });
         } else {
